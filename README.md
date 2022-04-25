@@ -29,7 +29,6 @@ We propose an efficient and accurate deep network for disparity estimation named
 
 ### Package Installation
 - Execute "sh compile.sh" to compile libraries needed by GANet.
-- Enter "layers_package" and execute "sh install.sh" to install customized layers, including Channel Normalization layer and Resample layer.
 
 We also release the docker version of this project, which has been configured completely and can be used directly. Please refer to [this website](https://hub.docker.com/repository/docker/paopaorobot/fadnet) for the image.
 
