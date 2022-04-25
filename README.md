@@ -28,7 +28,9 @@ We propose an efficient and accurate deep network for disparity estimation named
 - [Scene Flow](https://lmb.informatik.uni-freiburg.de/resources/datasets/SceneFlowDatasets.en.html)
 
 ### Package Installation
+Our FADNet needs no extra C++ package to support its execution (all ops are implemented by PyTorch primitives). If you would like to run GANet and AANet, you may optionally install the following packages.
 - Execute "sh compile.sh" to compile libraries needed by GANet.
+- Enter "networks/deform_conv" and execute "sh build.sh" to compile libraries needed by AANet.
 
 We also release the docker version of this project, which has been configured completely and can be used directly. Please refer to [this website](https://hub.docker.com/repository/docker/paopaorobot/fadnet) for the image.
 
