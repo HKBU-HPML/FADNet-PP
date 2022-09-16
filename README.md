@@ -1,6 +1,6 @@
 # FADNet++: Real-Time and Accurate Disparity Estimation with Configurable Networks
 
-This repository contains the code (in PyTorch) for the "[FADNet++](https://arxiv.org/abs/2110.02582)" paper, which is under review by IoTJ.
+This repository contains the code (in PyTorch) for the "[FADNet++](https://arxiv.org/abs/2110.02582)" paper, the evolutional version of "[FADNet](https://github.com/HKBU-HPML/FADNet)".
 
 ## Contents
 
