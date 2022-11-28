@@ -1,6 +1,6 @@
-# FADNet: A Fast and Accurate Network for Disparity Estimation
+# FADNet++: Real-Time and Accurate Disparity Estimation with Configurable Networks
 
-This repository contains the code (in PyTorch) for "[FADNet](https://github.com/HKBU-HPML/FADNet/blob/master/pdf/FADNet.pdf)" paper, which has been accepted by IEEE International Conference on Robotics and Automation 2020 (ICRA 2020).
+This repository contains the code (in PyTorch) for the "[FADNet++](https://arxiv.org/abs/2110.02582)" paper, the evolutional version of "[FADNet](https://github.com/HKBU-HPML/FADNet)".
 
 ## Contents
 
@@ -21,15 +21,16 @@ We propose an efficient and accurate deep network for disparity estimation named
 
 ### Dependencies
 
-- [Python2.7](https://www.python.org/downloads/)
-- [PyTorch(1.2.0+)](http://pytorch.org)
-- torchvision 0.2.0 (higher version may cause issues)
+- [Python3.6+](https://www.python.org/downloads/)
+- [PyTorch(1.7.0+)](http://pytorch.org)
+- torchvision 0.5.0+
 - [KITTI Stereo](http://www.cvlibs.net/datasets/kitti/eval_stereo.php)
 - [Scene Flow](https://lmb.informatik.uni-freiburg.de/resources/datasets/SceneFlowDatasets.en.html)
 
 ### Package Installation
+Our FADNet needs no extra C++ package to support its execution (all ops are implemented by PyTorch primitives). If you would like to run GANet and AANet, you may optionally install the following packages.
 - Execute "sh compile.sh" to compile libraries needed by GANet.
-- Enter "layers_package" and execute "sh install.sh" to install customized layers, including Channel Normalization layer and Resample layer.
+- Enter "networks/deform_conv" and execute "sh build.sh" to compile libraries needed by AANet.
 
 We also release the docker version of this project, which has been configured completely and can be used directly. Please refer to [this website](https://hub.docker.com/repository/docker/paopaorobot/fadnet) for the image.
 
@@ -158,12 +159,11 @@ Update: 2020/2/6 We released the pre-trained Scene Flow model.
 ## Citation
 If you find the code and paper is useful in your work, please cite our conference paper
 ```
-@inproceedings{wang2020fadnet,
-  title={{FADNet}: A Fast and Accurate Network for Disparity Estimation},
+@article{wang2021fadnet++,
+  title={FADNet++: Real-Time and Accurate Disparity Estimation with Configurable Networks},
   author={Wang, Qiang and Shi, Shaohuai and Zheng, Shizhen and Zhao, Kaiyong and Chu, Xiaowen},
-  booktitle={2020 {IEEE} International Conference on Robotics and Automation ({ICRA} 2020)},
-  pages={101--107},
-  year={2020}
+  journal={arXiv preprint arXiv:2110.02582},
+  year={2021}
 }
 ```
 ## Acknowledgement
