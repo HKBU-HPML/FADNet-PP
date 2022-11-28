@@ -32,14 +32,15 @@ class UCRefineNet(nn.Module):
         self.down_layers = nn.ModuleList(self.down_layers)
         self.up_layers = nn.ModuleList(self.up_layers)
 
-        self.last_up_layer = nn.Conv2d(init_channel+3, init_channel, kernel_size=3, stride=1, padding=1, bias=False)
+        self.last_up_layer = nn.Conv2d(init_channel+3+1, init_channel, kernel_size=3, stride=1, padding=1, bias=False)
+        self.last_disp_up = nn.ConvTranspose2d(1, 1, 4, 2, 1, bias=False)
         self.last_disp_regr = nn.Conv2d(init_channel, 1, kernel_size=3, stride=1, padding=1, bias=False)
 
     def forward(self, inputs, disps):
 
         down_feas = []
         up_feas = []
-        res_disps = []
+        final_disps = []
 
         down_feas.append(self.first_conv(inputs))
         for i in range(self.scale):
@@ -51,17 +52,22 @@ class UCRefineNet(nn.Module):
                 up_fea, res_disp = self.up_layers[i-1](down_feas[i], None)
             else:
                 input_fea = torch.cat((down_feas[i], up_feas[self.scale-i-1]), 1)
-                up_fea, res_disp = self.up_layers[i-1](input_fea, disps[self.scale-i-1])
+                up_fea, res_disp = self.up_layers[i-1](input_fea, final_disps[self.scale-i-1])
+
+            final_disp = disps[self.scale-i] + res_disp
 
             up_feas.append(up_fea)
-            res_disps.append(res_disp)
+            final_disps.append(final_disp)
 
         left_img = inputs[:, :3, :, :]
-        last_input_fea = torch.cat((left_img, up_feas[-1]), 1)
+        last_up_disp = self.last_disp_up(final_disps[-1])
+        last_input_fea = torch.cat((left_img, up_feas[-1], last_up_disp), 1)
         last_res_disp = self.last_disp_regr(self.last_up_layer(last_input_fea))
-        res_disps.append(last_res_disp)
 
-        return [disp + res_disp for disp, res_disp in zip(disps, res_disps)]
+        final_disp = disps[-1] + last_res_disp
+        final_disps.append(final_disp)
+
+        return final_disps
 
 
 class UCNet(nn.Module):
