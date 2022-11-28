@@ -118,7 +118,7 @@ class DisparityTrainer(object):
     def _build_net(self):
 
         # build net according to the net name
-        if self.net_name in ["psmnet", "ganet", "gwcnet", "aanet"]:
+        if self.net_name in ["ucnet", "ucresnet", "psmnet", "ganet", "gwcnet", "aanet"]:
             self.net = build_net(self.net_name)(self.maxdisp)
         elif self.net_name in ['fadnet', 'dispnetcss', 'mobilefadnet', 'slightfadnet', 'tinyfadnet', 'microfadnet', 'xfadnet']:
             eratio = 16; dratio = 16
@@ -244,8 +244,11 @@ class DisparityTrainer(object):
             data_time.update(time.time() - end)
             self.optimizer.zero_grad()
 
-            if self.net_name in ["fadnet", "mobilefadnet", 'slightfadnet', 'tinyfadnet', 'microfadnet', 'xfadnet']:
+            if self.net_name in ["fadnet", "mobilefadnet", 'slightfadnet', 'tinyfadnet', 'microfadnet', 'xfadnet', 'ucresnet']:
                 output_net1, output_net2 = self.net(input_var)
+                if self.net_name == 'ucresnet':
+                    output_net1.reverse()
+                    output_net2.reverse()
                 loss_net1 = self.criterion(output_net1, target_disp)
                 loss_net2 = self.criterion(output_net2, target_disp)
                 loss = loss_net1 + loss_net2
@@ -304,6 +307,13 @@ class DisparityTrainer(object):
                 loss = 0.5*F.smooth_l1_loss(output1[mask], target_disp[mask], size_average=True) + 0.5*F.smooth_l1_loss(output2[mask], target_disp[mask], size_average=True) + 0.7*F.smooth_l1_loss(output3[mask], target_disp[mask], size_average=True) + F.smooth_l1_loss(output4[mask], target_disp[mask], size_average=True)
                 flow2_EPE = self.epe(output3, target_disp)
                 d1m = d1_metric(output3, target_disp, maxdisp=self.maxdisp)
+            elif self.net_name == "ucnet":
+                output = self.net(input_var)
+                output.reverse()
+                loss = self.criterion(output, target_disp)
+                pred_disp = output[0]
+                flow2_EPE = self.epe(pred_disp.detach(), target_disp, maxdisp=self.maxdisp)
+                d1m = d1_metric(pred_disp, target_disp, maxdisp=self.maxdisp)
             else:
                 output = self.net(input_var)
                 loss = self.criterion(output, target_disp)
@@ -403,6 +413,27 @@ class DisparityTrainer(object):
                 loss = loss_net1 + loss_net2 + loss_net3
                 flow2_EPE = self.epe(output_net3, target_disp, maxdisp=self.maxdisp)
                 d1m = d1_metric(output_net3, target_disp, maxdisp=self.maxdisp)
+            elif self.net_name == 'ucnet':
+                with torch.no_grad():
+                    output = self.net(input_var)[-1]
+                output = scale_disp(output, (output.size()[0], self.img_height, self.img_width))
+
+                loss = self.epe(output, target_disp, maxdisp=self.maxdisp)
+                flow2_EPE = self.epe(output, target_disp, maxdisp=self.maxdisp)
+                d1m = d1_metric(output, target_disp, maxdisp=self.maxdisp)
+            elif self.net_name == 'ucresnet':
+                with torch.no_grad():
+                    outputs_net1, outputs_net2 = self.net(input_var)
+                    output_net1 = outputs_net1[-1]
+                    output_net2 = outputs_net2[-1]
+                output_net1 = scale_disp(output_net1, (output_net1.size()[0], self.img_height, self.img_width))
+                output_net2 = scale_disp(output_net2, (output_net2.size()[0], self.img_height, self.img_width))
+
+                loss_net1 = self.epe(output_net1, target_disp, maxdisp=self.maxdisp)
+                loss_net2 = self.epe(output_net2, target_disp, maxdisp=self.maxdisp)
+                loss = loss_net1 + loss_net2
+                flow2_EPE = self.epe(output_net2, target_disp, maxdisp=self.maxdisp)
+                d1m = d1_metric(output_net2, target_disp, maxdisp=self.maxdisp)
             else:
                 output = self.net(input_var)
                 output_net1 = output[0]

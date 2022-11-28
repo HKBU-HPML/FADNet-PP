@@ -68,11 +68,11 @@ class MultiScaleLoss(nn.Module):
         #self.multiScales = [nn.MaxPool2d(self.downscale*(2**i), self.downscale*(2**i)) for i in range(scales)]
         print('self.multiScales: ', self.multiScales, ' self.downscale: ', self.downscale)
 
-    def forward(self, input, target):
-        if (type(input) is tuple) or (type(input) is list):
+    def forward(self, inputs, target):
+        if (type(inputs) is tuple) or (type(inputs) is list):
             out = 0
           
-            for i, input_ in enumerate(input):
+            for i, input_ in enumerate(inputs):
                 target_ = self.multiScales[i](target)
 
                 if self.mask:
@@ -89,7 +89,7 @@ class MultiScaleLoss(nn.Module):
                 EPE_ = SL_EPE(input_, target_, self.maxdisp)
                 out += self.weights[i] * EPE_
         else:
-            out = self.loss(input, self.multiScales[0](target))
+            out = self.loss(inputs, self.multiScales[0](target))
         return out
 
 def multiscaleloss(scales=5, downscale=4, weights=None, loss='L1', maxdisp=192, sparse=False):

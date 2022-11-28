@@ -10,6 +10,7 @@ from networks.stackhourglass import PSMNet
 from networks.GANet_deep import GANet
 from networks.gwcnet import GwcNet
 from networks.aanet import AANet
+from networks.ucnet import UCNet, UCResNet
 from utils.common import logger
 
 SUPPORT_NETS = {
@@ -27,7 +28,9 @@ SUPPORT_NETS = {
         'psmnet': PSMNet,
         'ganet':GANet,
         'gwcnet':GwcNet,
-        'aanet':AANet
+        'aanet':AANet,
+        'ucnet':UCNet,
+        'ucresnet': UCResNet
         }
 
 def build_net(net_name):
