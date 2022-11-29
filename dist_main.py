@@ -1,23 +1,16 @@
-from __future__ import print_function
 import os
 import argparse
 import datetime
 import random
-import torch
 import logging
 import shutil
 
-import torch.nn as nn
-import torch.backends.cudnn as cudnn
 import horovod.torch as hvd
-
 from utils.common import *
 from dltrainer import DisparityTrainer
 from net_builder import SUPPORT_NETS
 from losses.multiscaleloss import multiscaleloss
 import wandb
-
-cudnn.benchmark = True
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth'):
@@ -27,11 +20,29 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth'):
         torch.save(state, os.path.join(opt.outf,'model_best.pth'))
         #shutil.copyfile(os.path.join(opt.outf,filename), os.path.join(opt.outf,'model_best.pth'))
 
+
 def main(opt):
 
     rank = hvd.rank()
     ngpu= hvd.size()
-    torch.cuda.set_device(rank%opt.nwpernode)
+    os.environ['CUDA_VISIBLE_DEVICES']=str(hvd.local_rank())    # should be set before importing torch
+
+    import torch
+    import torch.nn as nn
+    import torch.backends.cudnn as cudnn
+    cudnn.benchmark = True
+
+    torch.cuda.set_device(0)
+
+    torch.manual_seed(opt.manualSeed)
+    if opt.cuda:
+        torch.cuda.manual_seed_all(opt.manualSeed)
+    
+    if torch.cuda.is_available() and not opt.cuda:
+        logger.warning("WARNING: You should run with --cuda since you have a CUDA device.")
+
+    # another way to set cuda device for each worker, but always an extra process per worker on GPU 0.
+    # torch.cuda.set_device(rank%opt.nwpernode)
 
     # load the training loss scheme
     loss_json = load_loss_scheme(opt.loss)
@@ -129,8 +140,8 @@ if __name__ == '__main__':
     parser.add_argument('--augment', type=int, help='if augment data in training', default=0)
     
     opt = parser.parse_args()
-
     hvd.init()
+
     try:
         os.makedirs(opt.outf)
     except OSError:
@@ -149,11 +160,6 @@ if __name__ == '__main__':
         opt.manualSeed = random.randint(1, 10000)
     logger.info("Random Seed: %s", opt.manualSeed)
     random.seed(opt.manualSeed)
-    torch.manual_seed(opt.manualSeed)
-    if opt.cuda:
-        torch.cuda.manual_seed_all(opt.manualSeed)
-    
-    if torch.cuda.is_available() and not opt.cuda:
-        logger.warning("WARNING: You should run with --cuda since you have a CUDA device.")
+
     main(opt)
 
