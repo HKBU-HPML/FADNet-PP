@@ -99,10 +99,10 @@ class UpSamplingLayer(nn.Module):
 
         self.block1 = nn.ConvTranspose2d(input_channel, output_channel, kernel_size=3, stride=1, padding=1, bias=False)
         self.block2 = nn.ConvTranspose2d(output_channel, output_channel, kernel_size=4, stride=2, padding=1, bias=False)
+        self.act_fn = nn.LeakyReLU(0.1, inplace=True)
 
         self.disp_up = nn.ConvTranspose2d(1, 1, 4, 2, 1, bias=False)
         self.disp_regr = nn.Conv2d(output_channel, 1, kernel_size=3, stride=1, padding=1, bias=False)
-        self.relu = nn.ReLU(inplace=False)
         
         # weight initialization
         for m in self.modules():
@@ -124,9 +124,9 @@ class UpSamplingLayer(nn.Module):
 
         block1 = self.block1(concat_fea)
         disp = self.disp_regr(block1)
-        disp = self.relu(disp)
 
         block2 = self.block2(block1)
+        block2 = self.act_fn(block2)
 
         return block2, disp
 
@@ -135,4 +135,5 @@ class UpSamplingLayer(nn.Module):
 
     def bias_parameters(self):
         return [param for name, param in self.named_parameters() if 'bias' in name]
+
 

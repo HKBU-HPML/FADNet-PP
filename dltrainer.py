@@ -424,8 +424,8 @@ class DisparityTrainer(object):
             elif self.net_name == 'ucresnet':
                 with torch.no_grad():
                     outputs_net1, outputs_net2 = self.net(input_var)
-                    output_net1 = outputs_net1[-1]
-                    output_net2 = outputs_net2[-1]
+                output_net1 = outputs_net1[-1]
+                output_net2 = outputs_net2[-1]
                 output_net1 = scale_disp(output_net1, (output_net1.size()[0], self.img_height, self.img_width))
                 output_net2 = scale_disp(output_net2, (output_net2.size()[0], self.img_height, self.img_width))
 
