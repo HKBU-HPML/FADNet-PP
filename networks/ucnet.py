@@ -25,14 +25,14 @@ class UCRefineNet(nn.Module):
                 up_input_channel = output_channel
             else:
                 up_input_channel = output_channel*2 + 1
-            up_output_channel = init_channel*(2**(i))
+            up_output_channel = init_channel*(2**i)
             self.down_layers.append(FeatureLayer(input_channel=input_channel, output_channel=output_channel))
             self.up_layers.append(UpSamplingLayer(input_channel=up_input_channel, output_channel=up_output_channel))
 
         self.down_layers = nn.ModuleList(self.down_layers)
         self.up_layers = nn.ModuleList(self.up_layers)
 
-        self.last_up_layer = nn.Conv2d(init_channel+3+1, init_channel, kernel_size=3, stride=1, padding=1, bias=False)
+        self.last_up_layer = nn.ConvTranspose2d(init_channel+3+1, init_channel, kernel_size=3, stride=1, padding=1)
         self.last_disp_up = nn.ConvTranspose2d(1, 1, 4, 2, 1, bias=False)
         self.last_disp_regr = nn.Conv2d(init_channel, 1, kernel_size=3, stride=1, padding=1, bias=False)
         self.relu = nn.ReLU(inplace=True)
@@ -79,7 +79,7 @@ class UCNet(nn.Module):
 
         super(UCNet, self).__init__()
 
-        self.disp_range = [maxdisp // 3 * 2 // (2**(i)) for i in range(scale)]
+        self.disp_range = [maxdisp // 3 * 2 // (2**i) for i in range(scale)]
         self.scale = scale
         self.init_channel = init_channel
 
@@ -102,7 +102,8 @@ class UCNet(nn.Module):
         self.down_layers = nn.ModuleList(self.down_layers)
         self.up_layers = nn.ModuleList(self.up_layers)
 
-        self.last_up_layer = nn.Conv2d(init_channel+3, init_channel, kernel_size=3, stride=1, padding=1, bias=False)
+        self.last_up_layer = nn.ConvTranspose2d(init_channel+3+1, init_channel, kernel_size=3, stride=1, padding=1)
+        self.last_disp_up = nn.ConvTranspose2d(1, 1, 4, 2, 1, bias=False)
         self.last_disp_regr = nn.Conv2d(init_channel, 1, kernel_size=3, stride=1, padding=1, bias=False)
         self.relu = nn.ReLU(inplace=True)
 
@@ -141,7 +142,8 @@ class UCNet(nn.Module):
             up_feas.append(up_fea)
             disps.append(disp)
 
-        last_input_fea = torch.cat((left_img, up_feas[-1]), 1)
+        last_up_disp = self.last_disp_up(disps[-1])
+        last_input_fea = torch.cat((left_img, up_feas[-1], last_up_disp), 1)
         last_disp = self.last_disp_regr(self.last_up_layer(last_input_fea))
         last_disp = self.relu(last_disp)
         disps.append(last_disp)
